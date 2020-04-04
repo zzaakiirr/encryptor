@@ -1,7 +1,7 @@
 import argparse
 import getpass
 
-from db import authenticate
+import db
 from crypto import encrypt_file, decrypt_file
 
 
@@ -11,10 +11,12 @@ def get_args():
     # MARK: - Encrypt / Decrypt
 
     parser.add_argument('file', help='File to encrypt')
+
     parser.add_argument('--encrypt',
                         action="store_true",
                         default=None,
                         help='Flag if needed to encrypt')
+
     parser.add_argument('--decrypt',
                         default=None,
                         action="store_true",
@@ -23,16 +25,15 @@ def get_args():
 
     # MARK: - User authentication
 
-    parser.add_argument('-u', '--username',
+    parser.add_argument('--addUser',
                         default=None,
-                        help="Username for new user")
+                        action="store_true",
+                        help='Add new user')
 
-    parser.add_argument('-p', '--password',
+    parser.add_argument('--updatePassword',
                         default=None,
-                        help="Password for new user")
-
-    parser.add_argument('--addUser', help='Add new user')
-    parser.add_argument('--updatePassword', help='Update user password')
+                        action="store_true",
+                        help='Update user password')
 
     args = parser.parse_args()
     return args
@@ -47,26 +48,41 @@ if __name__ == '__main__':
     should_decrypt = args.decrypt
     filename = args.file
 
-    # add_user = args.addUser
-    # updatePassword = args.updatePassword
-    # username = args.username
-    # password = args.password
+    add_user = args.addUser
+    update_password = args.updatePassword
 
     if should_encrypt and should_decrypt:
-        error = "You cannot encrypt and decrypt at the same time. Choose one"
-        raise Exception(error)
+        msg = "You can't encrypt and decrypt at the same time. Choose one"
+        raise Exception(msg)
 
-    # if ()
+    if add_user and update_password:
+        msg = "You can't add user and change user password at the same time." + \
+              "Choose one"
+        raise Exception(msg)
 
     username = getpass.getpass("Username: ")
     password = getpass.getpass("Password: ")
 
-    is_authorized = authenticate(username, password)
+    is_authorized = db.authenticate(username, password)
     if not is_authorized:
         raise Exception("Credentials are invalid")
 
     if args.encrypt:
         encrypt_file(filename)
 
-    if args.decrypt:
+    elif args.decrypt:
         decrypt_file(filename)
+
+    elif add_user:
+        print("ATTENTION: Adding new user")
+        username = getpass.getpass("Username: ")
+        password = getpass.getpass("Password: ")
+
+        db.add_user(username, password)
+
+    elif update_password:
+        print("ATTENTION: Updating user password")
+        username = getpass.getpass("Username: ")
+        new_password = getpass.getpass("New password: ")
+
+        db.update_user_password(username, password)

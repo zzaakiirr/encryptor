@@ -33,3 +33,24 @@ def authenticate(username, password):
     result = c.fetchone() is not None
     conn.close()
     return result
+
+
+def add_user(username, password):
+    conn = connect(DB_NAME)
+
+    c = conn.cursor()
+    c.execute("INSERT INTO users VALUES (?, ?)", (username, password))
+
+    conn.commit()
+    conn.close()
+
+
+def update_user_password(username, new_password):
+    conn = connect(DB_NAME)
+
+    c = conn.cursor()
+    c.execute("UPDATE users SET password = ? WHERE username = ?",
+              (new_password, username))
+
+    conn.commit()
+    conn.close()
